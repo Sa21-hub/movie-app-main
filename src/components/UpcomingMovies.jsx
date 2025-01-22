@@ -8,16 +8,14 @@ const UpcomingMovies = () => {
     const navigate = useNavigate();
     const [allUpcomingMovies, setAllUpcomingMovies] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [count, setCount] = React.useState(1)
+    const [page, setPage] = useState(1);  // Use `page` instead of `count`
     
-
-
     let Api_key = 'c45a857c193f6302f2b5061c3b85e743';
     useEffect(() => {
 
         setLoading(true);
 
-        axios.request(`https://api.themoviedb.org/3/movie/upcoming?api_key=${Api_key}&language=en-US&page=${count}`).then((response) => {
+        axios.request(`https://api.themoviedb.org/3/movie/upcoming?api_key=${Api_key}&language=en-US&page=${page}`).then((response) => {
             console.log(response);
             setAllUpcomingMovies((allUpcomingMovies) => [...allUpcomingMovies, ...response.data.results]);
         })
@@ -28,23 +26,22 @@ const UpcomingMovies = () => {
             .finally(() => {
                 setLoading(false);
             });
-    }, [count])
+    }, [page])
 
     const handledclick = (e) => {
         console.log(e);
         navigate('/movie-detail', { state: { key: e } });
     }
 
-    const loadMoreData = () =>{
-        console.log(count);
-        setCount((prevCount) => prevCount + 1);
-        console.log(count);
-    }
-
+    const handlePageChange = (newPage) => {
+        console.log(newPage)
+        if (newPage >= 1 && newPage <= 20) {
+            setPage(newPage);  // Update to the selected page
+        }
+    };
 
     return (
         <div>
-
             <div>
                 {loading ? (
                     <div className="loader-container">
@@ -54,26 +51,46 @@ const UpcomingMovies = () => {
                     <div className="container text-center">
                         <div className="row row-cols-4">
                             {
-                                allUpcomingMovies.map((name, index) => {
-                                    return <div className="col" key={name.id} onClick={() => handledclick(name.id)}>
-                                        <div className="movie-card my-5">
-                                            <img src={`https://image.tmdb.org/t/p/w500${name?.poster_path}` ? `https://image.tmdb.org/t/p/w500${name?.poster_path}` : blankimg} alt={name.title} />
-                                            <p className='text-light fs-6 fw-bold'>{name.title}</p>
-                                            <p className='text-light'>{name.vote_average}</p>
-                                        </div>
+                                allUpcomingMovies.map((name, index) => (
+                                    <div key={index} className="movie-card my-5">
+                                        <img src={`https://image.tmdb.org/t/p/w500${name?.poster_path}` ? `https://image.tmdb.org/t/p/w500${name?.poster_path}` : blankimg} alt={name.title} />
+                                        <p className='text-light fs-6 fw-bold'>{name.title}</p>
                                     </div>
-                                })
+                                ))
                             }
-
                         </div>
-                        <div className='d-flex justify-content-center m-5'>
-                            <button className='btn btn-success' onClick={loadMoreData}>Load More</button>
+                        <div className="d-flex justify-content-center m-5">
+                            <nav aria-label="Page navigation example">
+                                <ul className="pagination">
+                                    <li className="page-item">
+                                        <button className="page-link" onClick={() => handlePageChange(page - 1)}>
+                                            Previous
+                                        </button>
+                                    </li>
+                                    {[...Array(5)].map((_, index) => {
+                                        const pageNumber = index + 1 + (page - 1); // Dynamically generate pages around the current page
+                                        return (
+                                            <li key={pageNumber} className="page-item">
+                                                <button
+                                                    className="page-link"
+                                                    onClick={() => handlePageChange(pageNumber)}
+                                                >
+                                                    {pageNumber}
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
+                                    <li className="page-item">
+                                        <button className="page-link" onClick={() => handlePageChange(page + 1)}>
+                                            Next
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
-
                     </div>
                 )}
             </div>
-
         </div>
     )
 }
